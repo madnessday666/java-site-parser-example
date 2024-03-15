@@ -360,13 +360,15 @@ public class PageParser {
                 "%s[%s]".formatted(
                         A,
                         HREF
-                )).attr(TITLE);
+                )).attr(TITLE).replaceAll("\\[.*]","");
         if (title.isEmpty()) {
             return element.select(
-                    "%s[%s]".formatted(
-                            A,
-                            HREF
-                    )).text();
+                            "%s[%s] > %s".formatted(
+                                    A,
+                                    HREF,
+                                    SPAN
+                            ))
+                    .text();
         }
         return title;
     }

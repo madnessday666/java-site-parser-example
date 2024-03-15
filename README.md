@@ -62,7 +62,7 @@ __Параметры можно комбинировать между собой
 </thead>
 <tbody>
   <tr>
-    <td align="center"><pre><code>-c, --category</code></pre></td>
+    <td align="center"><pre>-c, --category</pre></td>
     <td align="center">Integer</td>
     <td align="center"><pre><code>parser.jar -c 1</code></pre></td>
     <td>Парсит данные категории под номером 1 (включая все подкатегории).</td>

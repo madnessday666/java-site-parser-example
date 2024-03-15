@@ -126,7 +126,7 @@ public class CommandLineArgumentResolver {
                 }
 
                 case ARGUMENT_REGION, ARGUMENT_REGION_SHORT -> {
-                    if (!arguments[currentArgIndex + 1].matches("[а-яА-Я]+")) {
+                    if (!arguments[currentArgIndex + 1].matches("[а-яА-Я ]+")) {
                         System.out.printf(
                                 "Некорректное значение параметра: \"%s\" -> \"%s\"",
                                 argument,

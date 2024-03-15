@@ -110,10 +110,18 @@ public class PageParser {
                             ID,
                             NEXT_DATA
                     )).toString();
-            String categoryName = data.substring(
-                    data.indexOf("\"categoryName\":\"") + "\"categoryName\":\"".length(),
-                    data.indexOf("\",\"categoryId\"")
-            );
+            String categoryName;
+            if (data.contains("portalName")){
+                categoryName = data.substring(
+                        data.indexOf("\"portalName\":\"") + "\"portalName\":\"".length(),
+                        data.indexOf(",\"visitorCityId\"") - 1
+                );
+            }else{
+                categoryName = data.substring(
+                        data.indexOf("\"categoryName\":\"") + "\"categoryName\":\"".length(),
+                        data.indexOf(",\"categoryId\"") - 1
+                );
+            }
             this.setCategories(List.of(new Category(categoryName, categoryUrl)));
         } catch (IOException e) {
             System.out.println("Произошла ошибка при обработке запроса.\n" + e.getMessage());

@@ -112,7 +112,7 @@ __Параметры можно комбинировать между собой
   <tr>
     <td align="center"><pre>-u, --url</pre></td>
     <td align="center">String</td>
-    <td align="center"><pre>parser.jar -u $URL</pre></td>
+    <td align="center"><pre>parser.jar -u https://www.citilink.ru/catalog/smartfony/</pre></td>
     <td>Ссылка на категорию.</td>
   </tr>
 </tbody>

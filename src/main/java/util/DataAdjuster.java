@@ -37,6 +37,11 @@ public class DataAdjuster {
             parser.parseCategory(params.get(ARGUMENT_URL), regionUrl);
             adjustedList = parser.getCategories();
         }
+        adjustedList.forEach(category -> {
+            if (!category.getUrl().endsWith("/")){
+                category.setUrl(category.getUrl()+"/");
+            }
+        });
         return adjustedList;
     }
 

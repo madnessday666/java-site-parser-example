@@ -107,7 +107,7 @@ public class Printer {
                 delimiter,
                 "\n|Количество страниц: " + pages + " ".repeat(100 - 21 - String.valueOf(pages).length() - 1) + "|\n",
                 delimiter,
-                "\n|Таймаут, сек: " + timeout + " ".repeat(100 - 14 - String.valueOf(timeout).length() - 1) + "|\n",
+                "\n|Таймаут, сек: " + timeout + " ".repeat(100 - 15 - String.valueOf(timeout).length() - 1) + "|\n",
                 delimiter,
                 "\n|Формат конечного файла: " + format + " ".repeat(100 - 25 - format.toString().length() - 1) + "|\n"
                 , delimiter

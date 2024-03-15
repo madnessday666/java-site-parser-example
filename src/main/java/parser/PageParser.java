@@ -12,10 +12,10 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.json.Json;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.*;
 
 import static element.ElementAttribute.*;
@@ -239,61 +239,64 @@ public class PageParser {
     }
 
     public List<Product> parseProducts(List<Category> categories, int pages, String regionUrl) {
-        boolean isPagesModified = false;
-//        List<Product> products = new ArrayList<>();
         for (Category category : categories) {
-            String categoryUrl = category.getUrl();
-            if (!categoryUrl.endsWith("/")) {
-                categoryUrl += "/";
-            }
             System.out.printf(
                     "\rСбор информации о категории \"%s\"%s",
                     category.getTitle(),
-                    " ".repeat(30)
+                    " ".repeat(40)
             );
-            for (int i = 1; i <= pages; i++) {
-                WebDriver driver = configuration.getWebDriver();
-                try {
-                    driver.get(categoryUrl + regionUrl + "&p=" + i);
-                } catch (TimeoutException ignored) {
-                } finally {
-                    Document subcategoryDocument = Jsoup.parse(driver.getPageSource());
-                    if (hasSubcategories(subcategoryDocument)) {
-                        List<Category> subcategories = this.parseSubcategories(subcategoryDocument);
-                        this.parseProducts(subcategories, pages, regionUrl);
-                    }
-                    if (!isPagesModified) {
-                        isPagesModified = true;
-                        pages = Math.min(pages, this.parsePages(subcategoryDocument));
-                    }
-                    subcategoryDocument
-                            .select(
-                                    "%s[%s~=%s]".formatted(
-                                            DIV,
-                                            DATA_META_NAME,
-                                            PRODUCT
-                                    ))
-                            .forEach(element ->
-                                    products.add(
-                                            Product
-                                                    .builder()
-                                                    .availableIn(this.parseAvailability(element))
-                                                    .badges(this.parseBadges(element))
-                                                    .comments(this.parseComments(element))
-                                                    .deliveryIn(this.parseDeliveryTime(element))
-                                                    .deliveryTo(this.parseDeliverability(element))
-                                                    .price(this.parsePrice(element))
-                                                    .rating(this.parseRating(element))
-                                                    .title(this.parseTitle(element))
-                                                    .url(this.parseUrl(element))
-                                                    .build()
-                                    )
-                            );
-                }
-                driver.close();
-            }
+            this.parseProductPage(pages, category, regionUrl);
         }
         return products;
+    }
+
+    public void parseProductPage(int pages, Category category, String regionUrl) {
+        boolean isPagesModified = false;
+        String categoryUrl = category.getUrl() + regionUrl;
+        for (int i = 1; i <= pages; i++) {
+            WebDriver driver = configuration.getWebDriver();
+            try {
+                driver.get(categoryUrl + "&p=" + i);
+            } catch (TimeoutException ignored) {
+            } finally {
+                Document subcategoryDocument = Jsoup.parse(driver.getPageSource());
+                if (subcategoryDocument.head().text().isEmpty()) {
+                    subcategoryDocument =  this.retry(categoryUrl + "&p=" + i, category.getTitle());
+                }
+                if (hasSubcategories(subcategoryDocument)) {
+                    List<Category> subcategories = this.parseSubcategories(subcategoryDocument);
+                    this.parseProducts(subcategories, pages, regionUrl);
+                }
+                if (!isPagesModified) {
+                    isPagesModified = true;
+                    pages = Math.min(pages, this.parsePages(subcategoryDocument));
+                }
+                subcategoryDocument
+                        .select(
+                                "%s[%s~=%s]".formatted(
+                                        DIV,
+                                        DATA_META_NAME,
+                                        PRODUCT
+                                ))
+                        .forEach(element ->
+                                products.add(
+                                        Product
+                                                .builder()
+                                                .availableIn(this.parseAvailability(element))
+                                                .badges(this.parseBadges(element))
+                                                .comments(this.parseComments(element))
+                                                .deliveryIn(this.parseDeliveryTime(element))
+                                                .deliveryTo(this.parseDeliverability(element))
+                                                .price(this.parsePrice(element))
+                                                .rating(this.parseRating(element))
+                                                .title(this.parseTitle(element))
+                                                .url(this.parseUrl(element))
+                                                .build()
+                                )
+                        );
+            }
+            driver.close();
+        }
     }
 
     private double parseRating(Element element) {
@@ -388,6 +391,28 @@ public class PageParser {
                         A,
                         HREF
                 )).attr(HREF);
+    }
+
+    public Document retry(String url, String title) {
+        System.out.printf(
+                "\r[RETRY] Сбор информации о категории \"%s\"%s",
+                title,
+                " ".repeat(30)
+        );
+        WebDriver driver = configuration.getWebDriver();
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(10));
+        try {
+            driver.get(url);
+        } catch (TimeoutException ignored) {
+        } finally {
+            Document document = Jsoup.parse(driver.getPageSource());
+            if (document.head().text().isEmpty()) {
+                System.out.printf("\n\nПроизошла ошибка при попытке получении инфорации о категории \"%s\"", title);
+                System.exit(1);
+            }
+            driver.close();
+            return document;
+        }
     }
 
 }

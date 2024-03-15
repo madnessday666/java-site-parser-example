@@ -11,6 +11,7 @@ repositories {
 
 tasks.jar {
     manifest.attributes["Main-Class"] = "JavaSiteParser"
+    archiveFileName.set("parser.jar")
     val dependencies = configurations
             .runtimeClasspath
             .get()

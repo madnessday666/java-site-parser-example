@@ -69,16 +69,16 @@ public class Printer {
     public static void printHelp() {
         System.out.println("""
                 USAGE:
-                  java-site-parser.jar [OPTIONS]
+                  parser.jar [OPTIONS]
 
                 EXAMPLE:
-                  java-site-parser.jar -c 1 -p 2                               Parses 2 pages of 1 category
-                  java-site-parser.jar -c 1-3,^2 -p 1                          Parses 1 page from categories 1 to 3, excluding 2 category
-                  java-site-parser.jar -u $CATEGORY_URL                        Parses category with specified url
-                  java-site-parser.jar -c 1 -r Казань                          Parses 1 category in Казань region
-                  java-site-parser.jar -l categories                           Prints list of categories
-                  java-site-parser.jar -c 1 -f csv                             Parses 1 category and sets output file format to "csv"
-                  java-site-parser.jar -c 1 -f html -o /home/user/files        Parses 1 category and saves file in "/home/user/files"
+                  parser.jar -c 1 -p 2                               Parses 2 pages of 1 category
+                  parser.jar -c 1-3,^2 -p 1                          Parses 1 page from categories 1 to 3, excluding 2 category
+                  parser.jar -u $CATEGORY_URL                        Parses category with specified url
+                  parser.jar -c 1 -r Казань                          Parses 1 category in Казань region
+                  parser.jar -l categories                           Prints list of categories
+                  parser.jar -c 1 -f csv                             Parses 1 category and sets output file format to "csv"
+                  parser.jar -c 1 -f html -o /home/user/files        Parses 1 category and saves file in "/home/user/files"
 
                 OPTIONS:
                   -c, --category <category>            category number

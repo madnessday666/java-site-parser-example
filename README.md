@@ -79,31 +79,37 @@ __Параметры можно комбинировать между собой
     <td align="center"><code>parser.jar -h</code></td>
     <td>Вывести "помощь".</td>
   </tr>  
-    <tr>
+  <tr>
     <td align="center"><pre>-l, --list</pre></td>
     <td align="center">String</td>
     <td align="center"><code>parser.jar -l regions</code></td>
     <td>Вывести список возможных категорий/регионов. Варианты: categories, regions.</td>
   </tr>
-    <tr>
+  <tr>
     <td align="center"><pre>-p, --pages</pre></td>
     <td align="center">Integer</td>
     <td align="center"><code>parser.jar -p 3</code></td>
     <td>Количество страниц категории для парсинга.</td>
   </tr>
-    <tr>
+  <tr>
+    <td align="center"><pre>-t, --timeout</pre></td>
+    <td align="center">Integer</td>
+    <td align="center"><code>parser.jar -t 5</code></td>
+    <td>Таймаут загрузки страницы.</td>
+  </tr>
+  <tr>
     <td align="center"><pre>-o, --output</pre></td>
     <td align="center">String</td>
     <td align="center"><code>parser.jar -o /home/user/</code></td>
     <td>Путь до директории для создания файла.</td>
   </tr>
-    <tr>
+  <tr>
     <td align="center"><pre>-r, --region</pre></td>
     <td align="center">String</td>
     <td align="center"><code>parser.jar -r Москва</code></td>
     <td>Регион для парсинга.</td>
   </tr>
-    <tr>
+  <tr>
     <td align="center"><pre>-u, --url</pre></td>
     <td align="center">String</td>
     <td align="center"><code>parser.jar -u $URL</code></td>

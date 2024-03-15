@@ -88,6 +88,7 @@ public class Printer {
                   -p, --pages <pages>                  number of pages
                   -o, --output <directory>             output directory
                   -r, --region <region>                region name
+                  -t, --timeout <seconds>              page load timeout
                   -u, --url <url>                      category url
                 """);
     }
@@ -95,15 +96,18 @@ public class Printer {
     public static void printInfo(List<Category> categories,
                                  String region,
                                  int pages,
+                                 int timeout,
                                  FileFormat format) {
         System.out.printf("%s\n|Выбранные категории:%s|%n", delimiter, " ".repeat(78));
         printList(categories, "|  ", "|");
         System.out.printf(
-                "%s%s%s%s%s%s%s\n\n",
+                "%s%s%s%s%s%s%s%s%s\n\n",
                 delimiter,
                 "\n|Регион: " + region + " ".repeat(100 - 9 - region.length() - 1) + "|\n",
                 delimiter,
                 "\n|Количество страниц: " + pages + " ".repeat(100 - 21 - String.valueOf(pages).length() - 1) + "|\n",
+                delimiter,
+                "\n|Таймаут, сек: " + timeout + " ".repeat(100 - 14 - String.valueOf(timeout).length() - 1) + "|\n",
                 delimiter,
                 "\n|Формат конечного файла: " + format + " ".repeat(100 - 25 - format.toString().length() - 1) + "|\n"
                 , delimiter

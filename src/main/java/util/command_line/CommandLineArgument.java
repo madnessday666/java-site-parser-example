@@ -25,6 +25,9 @@ public class CommandLineArgument {
     public static final String ARGUMENT_REGION = "--region";
     public static final String ARGUMENT_REGION_SHORT = "-r";
 
+    public static final String ARGUMENT_TIMEOUT = "--timeout";
+    public static final String ARGUMENT_TIMEOUT_SHORT = "-t";
+
     public static final String ARGUMENT_URL = "--url";
     public static final String ARGUMENT_URL_SHORT = "-u";
 

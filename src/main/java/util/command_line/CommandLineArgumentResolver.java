@@ -137,6 +137,18 @@ public class CommandLineArgumentResolver {
                     arguments[currentArgIndex] = ARGUMENT_REGION;
                 }
 
+                case ARGUMENT_TIMEOUT, ARGUMENT_TIMEOUT_SHORT -> {
+                    if (!arguments[currentArgIndex + 1].matches("^[1-9]([0-9]+)?")) {
+                        System.out.printf(
+                                "Некорректное значение параметра: \"%s\" -> \"%s\"",
+                                argument,
+                                arguments[currentArgIndex + 1]
+                        );
+                        System.exit(1);
+                    }
+                    arguments[currentArgIndex] = ARGUMENT_TIMEOUT;
+                }
+
                 case ARGUMENT_URL, ARGUMENT_URL_SHORT -> {
                     if (!arguments[currentArgIndex + 1].startsWith("https://www.citilink.ru")) {
                         System.out.printf(

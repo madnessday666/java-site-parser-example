@@ -30,16 +30,19 @@ public class JavaSiteParser {
         String regionUrl = dataAdjuster.adjustRegionUrl(region);
         List<Category> categories = dataAdjuster.adjustCategories(regionUrl);
         int pages = dataAdjuster.adjustPages();
+        int timeout = dataAdjuster.adjustTimeout();
         FileFormat format = dataAdjuster.adjustFormat();
         String outputDir = dataAdjuster.adjustOutput();
+        configuration.setTimeout(timeout);
 
-        Printer.printInfo(categories, region, pages, format);
+        Printer.printInfo(categories, region, pages, timeout, format);
 
         FileWriter fileWriter = FileWriterFactory.createFileWriter(format);
         File outputFile = fileWriter.createFile(outputDir, region);
         List<Product> products = parser.parseProducts(categories, pages, regionUrl);
         System.out.printf("\rСбор информации завершен! Формирование отчета...%s\n\n", " ".repeat(20));
         fileWriter.writeToFile(outputFile.getAbsolutePath(), products);
+        System.exit(0);
     }
 
 }

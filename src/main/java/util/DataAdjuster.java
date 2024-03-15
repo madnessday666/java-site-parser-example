@@ -103,4 +103,8 @@ public class DataAdjuster {
         return regionUrl;
     }
 
+    public int adjustTimeout() {
+        return Integer.parseInt(params.getOrDefault(ARGUMENT_TIMEOUT, "5"));
+    }
+
 }

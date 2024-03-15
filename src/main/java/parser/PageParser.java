@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.json.Json;
 
 import java.io.IOException;
@@ -29,6 +30,7 @@ public class PageParser {
 
     private List<Category> categories = new ArrayList<>();
     private List<Region> regions = new ArrayList<>();
+    private List<Product> products = new ArrayList<>();
 
     private String defaultRegion;
 
@@ -111,12 +113,12 @@ public class PageParser {
                             NEXT_DATA
                     )).toString();
             String categoryName;
-            if (data.contains("portalName")){
+            if (data.contains("portalName")) {
                 categoryName = data.substring(
                         data.indexOf("\"portalName\":\"") + "\"portalName\":\"".length(),
                         data.indexOf(",\"visitorCityId\"") - 1
                 );
-            }else{
+            } else {
                 categoryName = data.substring(
                         data.indexOf("\"categoryName\":\"") + "\"categoryName\":\"".length(),
                         data.indexOf(",\"categoryId\"") - 1
@@ -238,8 +240,7 @@ public class PageParser {
 
     public List<Product> parseProducts(List<Category> categories, int pages, String regionUrl) {
         boolean isPagesModified = false;
-        List<Product> products = new ArrayList<>();
-        WebDriver driver = configuration.getWebDriver();
+//        List<Product> products = new ArrayList<>();
         for (Category category : categories) {
             String categoryUrl = category.getUrl();
             if (!categoryUrl.endsWith("/")) {
@@ -251,19 +252,19 @@ public class PageParser {
                     " ".repeat(30)
             );
             for (int i = 1; i <= pages; i++) {
+                WebDriver driver = configuration.getWebDriver();
                 try {
-
                     driver.get(categoryUrl + regionUrl + "&p=" + i);
                 } catch (TimeoutException ignored) {
                 } finally {
                     Document subcategoryDocument = Jsoup.parse(driver.getPageSource());
+                    if (hasSubcategories(subcategoryDocument)) {
+                        List<Category> subcategories = this.parseSubcategories(subcategoryDocument);
+                        this.parseProducts(subcategories, pages, regionUrl);
+                    }
                     if (!isPagesModified) {
                         isPagesModified = true;
                         pages = Math.min(pages, this.parsePages(subcategoryDocument));
-                    }
-                    if (hasSubcategories(subcategoryDocument)) {
-                        List<Category> subcategories = this.parseSubcategories(subcategoryDocument);
-                        products.addAll(this.parseProducts(subcategories, pages, regionUrl));
                     }
                     subcategoryDocument
                             .select(
@@ -289,9 +290,9 @@ public class PageParser {
                                     )
                             );
                 }
+                driver.close();
             }
         }
-        driver.quit();
         return products;
     }
 
@@ -368,7 +369,7 @@ public class PageParser {
                 "%s[%s]".formatted(
                         A,
                         HREF
-                )).attr(TITLE).replaceAll("\\[.*]","");
+                )).attr(TITLE).replaceAll("\\[.*]", "");
         if (title.isEmpty()) {
             return element.select(
                             "%s[%s] > %s".formatted(

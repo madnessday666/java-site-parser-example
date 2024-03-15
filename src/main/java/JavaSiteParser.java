@@ -33,12 +33,6 @@ public class JavaSiteParser {
         FileFormat format = dataAdjuster.adjustFormat();
         String outputDir = dataAdjuster.adjustOutput();
 
-        System.out.println(region);
-        System.out.println(regionUrl);
-        System.out.println(pages);
-        System.out.println(format);
-        System.out.println(outputDir);
-
         Printer.printInfo(categories, region, pages, format);
 
         FileWriter fileWriter = FileWriterFactory.createFileWriter(format);

@@ -95,7 +95,7 @@ __Параметры можно комбинировать между собой
     <td align="center"><pre>-o, --output</pre></td>
     <td align="center"><pre><code>String</code></pre></td>
     <td align="center"><pre><code>parser.jar -o /home/user/</code></pre></td>
-    <td>Путь (абсолютный) до директории для создания файла.</td>
+    <td>Путь до директории для создания файла.</td>
   </tr>
     <tr>
     <td align="center"><pre>-r, --region</pre></td>

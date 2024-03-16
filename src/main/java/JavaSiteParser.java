@@ -39,10 +39,10 @@ public class JavaSiteParser {
 
         FileWriter fileWriter = FileWriterFactory.createFileWriter(format);
         File outputFile = fileWriter.createFile(outputDir, region);
-        List<Product> products = parser.parseProducts(categories, pages, regionUrl);
+        List<Product> products = parser.parseCategoryProducts(categories, regionUrl, pages);
         System.out.printf("\rСбор информации завершен! Формирование отчета...%s\n\n", " ".repeat(20));
         fileWriter.writeToFile(outputFile.getAbsolutePath(), products);
-        System.exit(0);
+        configuration.closeAllSessions();
     }
 
 }

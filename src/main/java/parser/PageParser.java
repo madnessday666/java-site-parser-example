@@ -38,6 +38,35 @@ public class PageParser {
         this.configuration = configuration;
     }
 
+    private boolean hasContent(Document categoryPage) {
+        return !categoryPage
+                .select(
+                        "%s[%s~=%s]".formatted(
+                                DIV,
+                                DATA_META_NAME,
+                                PRODUCT
+                        ))
+                .select(
+                        "%s[%s~=%s]".formatted(
+                                A,
+                                DATA_META_NAME,
+                                SNIPPET_TITLE
+                        ))
+                .attr(TITLE)
+                .isEmpty() && !hasSubcategories(categoryPage);
+    }
+
+    private boolean hasSubcategories(Element element) {
+        Elements subcategories = element.select(
+                "%s[%s~=%s]".formatted(
+                        DIV,
+                        DATA_META_NAME,
+                        CATEGORY_CARDS
+                )
+        );
+        return !subcategories.isEmpty();
+    }
+
     private String parseAvailability(Element element) {
         Elements availability = element.select(
                 "%s[%s~=%s]".formatted(
@@ -49,36 +78,6 @@ public class PageParser {
             return "-";
         }
         return availability.text();
-    }
-
-    private String parseDeliverability(Element element) {
-        Elements deliverability = element.select(
-                "%s[%s~=%s]".formatted(
-                        BUTTON,
-                        DATA_META_NAME,
-                        AVAILABLE_TO_DELIVERY
-                ));
-        if (deliverability.isEmpty()) {
-            return "-";
-        }
-        return deliverability.text();
-    }
-
-    private String parseDeliveryTime(Element element) {
-        Elements deliverability = element.select(
-                "%s[%s~=%s]".formatted(
-                        BUTTON,
-                        DATA_META_NAME,
-                        AVAILABLE_TO_DELIVERY
-                ));
-        if (deliverability.isEmpty()) {
-            return "-";
-        } else {
-            if (deliverability.next().isEmpty()) {
-                return "-";
-            }
-        }
-        return deliverability.next().text().replaceAll("[^a-zA-Zа-яА-Я0-9\\s]", "");
     }
 
     private String parseBadges(Element element) {
@@ -112,18 +111,15 @@ public class PageParser {
                             ID,
                             NEXT_DATA
                     )).toString();
-            String categoryName;
-            if (data.contains("portalName")) {
-                categoryName = data.substring(
-                        data.indexOf("\"portalName\":\"") + "\"portalName\":\"".length(),
-                        data.indexOf(",\"visitorCityId\"") - 1
-                );
-            } else {
-                categoryName = data.substring(
-                        data.indexOf("\"categoryName\":\"") + "\"categoryName\":\"".length(),
-                        data.indexOf(",\"categoryId\"") - 1
-                );
-            }
+            String categoryName = data.contains("portalName") ?
+                    data.substring(
+                            data.indexOf("\"portalName\":\"") + "\"portalName\":\"".length(),
+                            data.indexOf(",\"visitorCityId\"") - 1
+                    ) :
+                    data.substring(
+                            data.indexOf("\"categoryName\":\"") + "\"categoryName\":\"".length(),
+                            data.indexOf(",\"categoryId\"") - 1
+                    );
             this.setCategories(List.of(new Category(categoryName, categoryUrl)));
         } catch (IOException e) {
             System.out.println("Произошла ошибка при обработке запроса.\n" + e.getMessage());
@@ -160,6 +156,46 @@ public class PageParser {
         }
     }
 
+    public List<Product> parseCategoryProducts(List<Category> categories, String regionUrl, int pages) {
+        for (Category category : categories) {
+            this.parseCategoryProductPages(category, regionUrl, pages);
+        }
+        return products;
+    }
+
+    public void parseCategoryProductPages(Category category, String regionUrl, int pages) {
+        boolean isPagesModified = false;
+        for (int i = 1; i <= pages; i++) {
+            System.out.printf(
+                    "\rСбор информации о категории \"%s\", стр. %d %s",
+                    category.getTitle(),
+                    i,
+                    " ".repeat(40)
+            );
+            WebDriver driver = configuration.getWebDriver();
+            String categoryUrl = category.getUrl() + regionUrl + "&p=" + i;
+            try {
+                driver.get(categoryUrl);
+            } catch (TimeoutException ignored) {
+            } finally {
+                Document categoryPage = Jsoup.parse(driver.getPageSource());
+                if (!hasContent(categoryPage) && !hasSubcategories(categoryPage)) {
+                    categoryPage = this.retry(categoryUrl, category.getTitle(), i);
+                }
+                if (hasSubcategories(categoryPage)) {
+                    List<Category> subcategories = this.parseSubcategories(categoryPage);
+                    this.parseCategoryProducts(subcategories, regionUrl, pages);
+                }
+                if (!isPagesModified) {
+                    isPagesModified = true;
+                    pages = Math.min(pages, this.parsePages(categoryPage));
+                }
+                this.parseProducts(categoryPage);
+            }
+            driver.close();
+        }
+    }
+
     private int parseComments(Element element) {
         Elements comments = element.select(
                 "%s[%s~=%s]".formatted(
@@ -193,29 +229,35 @@ public class PageParser {
         }
     }
 
-    private boolean hasSubcategories(Element element) {
-        Elements subcategories = element.select(
+    private String parseDeliverability(Element element) {
+        Elements deliverability = element.select(
                 "%s[%s~=%s]".formatted(
-                        DIV,
+                        BUTTON,
                         DATA_META_NAME,
-                        CATEGORY_CARDS
-                )
-        );
-        return !subcategories.isEmpty();
-    }
-
-    private int parsePrice(Element element) {
-        Elements price = element.select(
-                "%s[%s]".formatted(
-                        SPAN,
-                        DATA_META_PRICE
+                        AVAILABLE_TO_DELIVERY
                 ));
-        if (price.isEmpty()) {
-            return 0;
+        if (deliverability.isEmpty()) {
+            return "-";
         }
-        return Integer.parseInt(price.attr(DATA_META_PRICE));
+        return deliverability.text();
     }
 
+    private String parseDeliveryTime(Element element) {
+        Elements deliverability = element.select(
+                "%s[%s~=%s]".formatted(
+                        BUTTON,
+                        DATA_META_NAME,
+                        AVAILABLE_TO_DELIVERY
+                ));
+        if (deliverability.isEmpty()) {
+            return "-";
+        } else {
+            if (deliverability.next().isEmpty()) {
+                return "-";
+            }
+        }
+        return deliverability.next().text().replaceAll("[^a-zA-Zа-яА-Я0-9\\s]", "");
+    }
 
     private int parsePages(Element element) {
         String pages = element.select(
@@ -238,65 +280,41 @@ public class PageParser {
         }
     }
 
-    public List<Product> parseProducts(List<Category> categories, int pages, String regionUrl) {
-        for (Category category : categories) {
-            System.out.printf(
-                    "\rСбор информации о категории \"%s\"%s",
-                    category.getTitle(),
-                    " ".repeat(40)
-            );
-            this.parseProductPage(pages, category, regionUrl);
+    private int parsePrice(Element element) {
+        Elements price = element.select(
+                "%s[%s]".formatted(
+                        SPAN,
+                        DATA_META_PRICE
+                ));
+        if (price.isEmpty()) {
+            return 0;
         }
-        return products;
+        return Integer.parseInt(price.attr(DATA_META_PRICE));
     }
 
-    public void parseProductPage(int pages, Category category, String regionUrl) {
-        boolean isPagesModified = false;
-        String categoryUrl = category.getUrl() + regionUrl;
-        for (int i = 1; i <= pages; i++) {
-            WebDriver driver = configuration.getWebDriver();
-            try {
-                driver.get(categoryUrl + "&p=" + i);
-            } catch (TimeoutException ignored) {
-            } finally {
-                Document subcategoryDocument = Jsoup.parse(driver.getPageSource());
-                if (subcategoryDocument.head().text().isEmpty()) {
-                    subcategoryDocument =  this.retry(categoryUrl + "&p=" + i, category.getTitle());
-                }
-                if (hasSubcategories(subcategoryDocument)) {
-                    List<Category> subcategories = this.parseSubcategories(subcategoryDocument);
-                    this.parseProducts(subcategories, pages, regionUrl);
-                }
-                if (!isPagesModified) {
-                    isPagesModified = true;
-                    pages = Math.min(pages, this.parsePages(subcategoryDocument));
-                }
-                subcategoryDocument
-                        .select(
-                                "%s[%s~=%s]".formatted(
-                                        DIV,
-                                        DATA_META_NAME,
-                                        PRODUCT
-                                ))
-                        .forEach(element ->
-                                products.add(
-                                        Product
-                                                .builder()
-                                                .availableIn(this.parseAvailability(element))
-                                                .badges(this.parseBadges(element))
-                                                .comments(this.parseComments(element))
-                                                .deliveryIn(this.parseDeliveryTime(element))
-                                                .deliveryTo(this.parseDeliverability(element))
-                                                .price(this.parsePrice(element))
-                                                .rating(this.parseRating(element))
-                                                .title(this.parseTitle(element))
-                                                .url(this.parseUrl(element))
-                                                .build()
-                                )
-                        );
-            }
-            driver.close();
-        }
+    public void parseProducts(Element categoryPage) {
+        categoryPage.select(
+                        "%s[%s~=%s]".formatted(
+                                DIV,
+                                DATA_META_NAME,
+                                PRODUCT
+                        ))
+                .forEach(element ->
+                        this.products.add(
+                                Product
+                                        .builder()
+                                        .availableIn(this.parseAvailability(element))
+                                        .badges(this.parseBadges(element))
+                                        .comments(this.parseComments(element))
+                                        .deliveryIn(this.parseDeliveryTime(element))
+                                        .deliveryTo(this.parseDeliverability(element))
+                                        .price(this.parsePrice(element))
+                                        .rating(this.parseRating(element))
+                                        .title(this.parseTitle(element))
+                                        .url(this.parseUrl(element))
+                                        .build()
+                        )
+                );
     }
 
     private double parseRating(Element element) {
@@ -393,10 +411,12 @@ public class PageParser {
                 )).attr(HREF);
     }
 
-    public Document retry(String url, String title) {
+    @SuppressWarnings({"all"})
+    public Document retry(String url, String title, int page) {
         System.out.printf(
-                "\r[RETRY] Сбор информации о категории \"%s\"%s",
+                "\r[RETRY] Сбор информации о категории \"%s\", стр. %d %s",
                 title,
+                page,
                 " ".repeat(30)
         );
         WebDriver driver = configuration.getWebDriver();
@@ -406,8 +426,12 @@ public class PageParser {
         } catch (TimeoutException ignored) {
         } finally {
             Document document = Jsoup.parse(driver.getPageSource());
-            if (document.head().text().isEmpty()) {
-                System.out.printf("\n\nПроизошла ошибка при попытке получении инфорации о категории \"%s\"", title);
+            if (!hasContent(document)) {
+                System.out.printf(
+                        "\n\nПроизошла ошибка при попытке получении инфорации о категории \"%s\", стр. %d",
+                        title,
+                        page
+                );
                 System.exit(1);
             }
             driver.close();

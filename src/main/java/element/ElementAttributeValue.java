@@ -27,4 +27,6 @@ public class ElementAttributeValue {
 
     public static final String RATING = "MetaInfo_rating";
 
+    public static final String SNIPPET_TITLE = "Snippet__title";
+
 }

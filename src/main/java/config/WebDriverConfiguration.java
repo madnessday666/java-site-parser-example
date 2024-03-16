@@ -8,6 +8,8 @@ import org.openqa.selenium.chrome.ChromeOptions;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 
 @Setter
@@ -15,6 +17,7 @@ import java.util.logging.Level;
 public class WebDriverConfiguration {
 
     private int timeout;
+    private List<WebDriver> sessions = new ArrayList<>();
 
     public WebDriver getWebDriver() {
         java.util.logging.Logger.getLogger("org.openqa.selenium").setLevel(Level.OFF);
@@ -23,7 +26,12 @@ public class WebDriverConfiguration {
         options.setPageLoadTimeout(Duration.of(timeout, ChronoUnit.SECONDS));
         WebDriver driver = new ChromeDriver(options);
         driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(0));
+        sessions.add(driver);
         return driver;
+    }
+
+    public void closeAllSessions() {
+        sessions.forEach(WebDriver::quit);
     }
 
 }

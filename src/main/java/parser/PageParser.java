@@ -38,7 +38,7 @@ public class PageParser {
         this.configuration = configuration;
     }
 
-    private boolean hasContent(Document categoryPage) {
+    private boolean hasProducts(Document categoryPage) {
         return !categoryPage
                 .select(
                         "%s[%s~=%s]".formatted(
@@ -53,7 +53,7 @@ public class PageParser {
                                 SNIPPET_TITLE
                         ))
                 .attr(TITLE)
-                .isEmpty() && !hasSubcategories(categoryPage);
+                .isEmpty();
     }
 
     private boolean hasSubcategories(Element element) {
@@ -179,12 +179,11 @@ public class PageParser {
             } catch (TimeoutException ignored) {
             } finally {
                 Document categoryPage = Jsoup.parse(driver.getPageSource());
-                if (!hasContent(categoryPage) && !hasSubcategories(categoryPage)) {
+                if (!hasProducts(categoryPage) && !hasSubcategories(categoryPage)) {
                     categoryPage = this.retry(categoryUrl, category.getTitle(), i);
                 }
                 if (hasSubcategories(categoryPage)) {
-                    List<Category> subcategories = this.parseSubcategories(categoryPage);
-                    this.parseCategoryProducts(subcategories, regionUrl, pages);
+                    this.parseCategoryProducts(this.parseSubcategories(categoryPage), regionUrl, pages);
                 }
                 if (!isPagesModified) {
                     isPagesModified = true;
@@ -390,7 +389,9 @@ public class PageParser {
                 "%s[%s]".formatted(
                         A,
                         HREF
-                )).attr(TITLE).replaceAll("\\[.*]", "");
+                ))
+                .attr(TITLE)
+                .replaceAll("\\[.*]", "");
         if (title.isEmpty()) {
             return element.select(
                             "%s[%s] > %s".formatted(
@@ -420,13 +421,13 @@ public class PageParser {
                 " ".repeat(30)
         );
         WebDriver driver = configuration.getWebDriver();
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(10));
+        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(15));
         try {
             driver.get(url);
         } catch (TimeoutException ignored) {
         } finally {
             Document document = Jsoup.parse(driver.getPageSource());
-            if (!hasContent(document)) {
+            if (!hasProducts(document) && !hasSubcategories(document)) {
                 System.out.printf(
                         "\n\nПроизошла ошибка при попытке получении инфорации о категории \"%s\", стр. %d",
                         title,

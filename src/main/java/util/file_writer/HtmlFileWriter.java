@@ -53,7 +53,8 @@ public class HtmlFileWriter extends FileWriter {
             printWriter.write(body.toString());
             System.out.println("Отчет успешно сформирован!\nПуть до файла: " + pathToFile);
         } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
+            System.out.println("Возникла ошибка во время формирования отчета");
+            System.exit(1);
         }
     }
 
